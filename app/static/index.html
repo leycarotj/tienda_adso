@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tienda ADSO | Panel de gestión</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">T</div>
+      <div>
+        <h1>Tienda ADSO</h1>
+        <p>Panel de gestión · FastAPI + MySQL</p>
+      </div>
+    </div>
+    <div class="connection"><span class="status-dot"></span><span id="connectionText">Conectando con la API...</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="welcome">
+      <div>
+        <p class="eyebrow">PANEL ADMINISTRATIVO</p>
+        <h2>Gestiona tu tienda</h2>
+        <p class="muted">Administra productos, clientes y consulta los pedidos registrados.</p>
+      </div>
+      <button class="button button-light" id="refreshButton" type="button">↻ Actualizar datos</button>
+    </section>
+
+    <nav class="tabs" aria-label="Secciones">
+      <button class="tab active" data-section="productos" type="button">▦ Productos</button>
+      <button class="tab" data-section="clientes" type="button">♙ Clientes</button>
+      <button class="tab" data-section="pedidos" type="button">▤ Pedidos</button>
+    </nav>
+
+    <div id="notice" class="notice hidden" role="status"></div>
+
+    <section id="productos" class="section active">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">CATÁLOGO</p>
+          <h2>Productos</h2>
+          <p class="muted">Registra, consulta y administra el inventario.</p>
+        </div>
+        <span class="count" id="productosCount">0 productos</span>
+      </div>
+      <div class="panel form-panel">
+        <h3 id="productoFormTitle">Registrar producto</h3>
+        <form id="productoForm" class="form-grid">
+          <input type="hidden" id="productoId">
+          <label>Nombre del producto<input id="productoNombre" name="nombre" required minlength="2" maxlength="100"
+              placeholder="Ej. Mouse inalámbrico"></label>
+          <label>Precio (COP)<input id="productoPrecio" name="precio" type="number" required min="0.01" step="0.01"
+              placeholder="35000"></label>
+          <label>Stock disponible<input id="productoStock" name="stock" type="number" required min="0" step="1"
+              placeholder="12"></label>
+          <div class="form-actions">
+            <button class="button button-primary" id="productoSubmit" type="submit">＋ Guardar producto</button>
+            <button class="button button-light hidden" id="productoCancel" type="button">Cancelar edición</button>
+          </div>
+        </form>
+      </div>
+      <div class="panel table-panel">
+        <div class="table-toolbar">
+          <h3>Inventario</h3>
+          <div class="search-box"><input id="productoBuscar" type="search" placeholder="Buscar por nombre..."><button
+              class="button button-light" id="productoBuscarBtn" type="button">Buscar</button></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="productosBody">
+              <tr>
+                <td colspan="5" class="empty">Cargando productos...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="clientes" class="section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">DIRECTORIO</p>
+          <h2>Clientes</h2>
+          <p class="muted">Guarda los datos de tus clientes.</p>
+        </div>
+        <span class="count" id="clientesCount">0 clientes</span>
+      </div>
+      <div class="panel form-panel">
+        <h3 id="clienteFormTitle">Registrar cliente</h3>
+        <form id="clienteForm" class="form-grid">
+          <input type="hidden" id="clienteId">
+          <label>Nombre completo<input id="clienteNombre" name="nombre" required minlength="2" maxlength="100"
+              placeholder="Ej. Ana Pérez"></label>
+          <label>Correo electrónico<input id="clienteCorreo" name="correo" type="email" required maxlength="120"
+              placeholder="ana@ejemplo.com"></label>
+          <div class="form-actions">
+            <button class="button button-primary" id="clienteSubmit" type="submit">＋ Guardar cliente</button>
+            <button class="button button-light hidden" id="clienteCancel" type="button">Cancelar edición</button>
+          </div>
+        </form>
+      </div>
+      <div class="panel table-panel">
+        <div class="table-toolbar">
+          <h3>Clientes registrados</h3><input class="search-input" id="clienteBuscar" type="search"
+            placeholder="Buscar nombre o correo...">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="clientesBody">
+              <tr>
+                <td colspan="4" class="empty">Cargando clientes...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="pedidos" class="section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">VENTAS</p>
+          <h2>Pedidos</h2>
+          <p class="muted">Consulta pedidos, totales y sus detalles.</p>
+        </div>
+        <span class="count" id="pedidosCount">0 pedidos</span>
+      </div>
+      <div class="panel table-panel">
+        <div class="table-toolbar">
+          <h3>Pedidos registrados</h3><button class="button button-light" id="pedidosReload" type="button">↻
+            Recargar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Total</th>
+                <th>Detalle</th>
+              </tr>
+            </thead>
+            <tbody id="pedidosBody">
+              <tr>
+                <td colspan="6" class="empty">Cargando pedidos...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel detail-panel hidden" id="pedidoDetalle">
+        <div class="table-toolbar">
+          <h3 id="pedidoDetalleTitulo">Detalle del pedido</h3><button class="icon-button" id="pedidoDetalleCerrar"
+            type="button" aria-label="Cerrar detalle">✕</button>
+        </div>
+        <div id="pedidoDetalleContenido"></div>
+      </div>
+    </section>
+
+    <footer>Proyecto académico ADSO · API REST con FastAPI y MySQL</footer>
+  </main>
+
+  <script>
+    // La API utiliza las rutas /productos, /clientes y /pedidos definidas en FastAPI.
+    const API_URL = "http://127.0.0.1:8000";
+    const $ = (id) => document.getElementById(id);
+    let productos = [];
+    let clientes = [];
+    let pedidos = [];
+    let noticeTimer;
+
+    function showNotice(message, type = "success") {
+      const notice = $("notice");
+      notice.textContent = message;
+      notice.className = `notice ${type}`;
+      clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(() => notice.classList.add("hidden"), 5000);
+    }
+
+    async function api(path, options = {}) {
+      const config = { ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } };
+      let response;
+      try {
+        response = await fetch(`${API_URL}${path}`, config);
+      } catch {
+        throw new Error("No se pudo conectar con FastAPI. Comprueba que el servidor esté ejecutándose.");
+      }
+      const text = await response.text();
+      let data = null;
+      if (text) {
+        try { data = JSON.parse(text); } catch { data = text; }
+      }
+      if (!response.ok) {
+        let detail = data?.detail;
+        if (Array.isArray(detail)) detail = detail.map(e => `${e.loc?.slice(-1)[0] || "campo"}: ${e.msg}`).join(" · ");
+        throw new Error(detail || `Error HTTP ${response.status}`);
+      }
+      return data;
+    }
+
+    function money(value) {
+      return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 2 }).format(Number(value));
+    }
+
+    function safe(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+      })[char]);
+    }
+
+    async function loadProductos() {
+      const search = $("productoBuscar").value.trim();
+      const query = new URLSearchParams({ pagina: "1", limite: "50" });
+      if (search) query.set("buscar", search);
+      productos = await api(`/productos?${query.toString()}`);
+      renderProductos();
+    }
+
+    function renderProductos() {
+      $("productosCount").textContent = `${productos.length} producto${productos.length === 1 ? "" : "s"}`;
+      const body = $("productosBody");
+      if (!productos.length) {
+        body.innerHTML = '<tr><td colspan="5" class="empty">No se encontraron productos.</td></tr>';
+        return;
+      }
+      body.innerHTML = productos.map(p => `<tr>
+        <td><span class="id-tag">#${p.id}</span></td>
+        <td class="strong">${safe(p.nombre)}</td><td>${money(p.precio)}</td>
+        <td><span class="stock ${Number(p.stock) === 0 ? "stock-zero" : ""}">${p.stock}</span></td>
+        <td><div class="actions"><button class="button button-small button-edit" data-action="edit-product" data-id="${p.id}">Editar</button><button class="button button-small button-delete" data-action="delete-product" data-id="${p.id}">Eliminar</button></div></td>
+      </tr>`).join("");
+    }
+
+    function resetProductoForm() {
+      $("productoForm").reset();
+      $("productoId").value = "";
+      $("productoFormTitle").textContent = "Registrar producto";
+      $("productoSubmit").textContent = "＋ Guardar producto";
+      $("productoCancel").classList.add("hidden");
+    }
+
+    $("productoForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const id = $("productoId").value;
+      const body = {
+        nombre: $("productoNombre").value.trim(),
+        precio: Number($("productoPrecio").value),
+        stock: Number($("productoStock").value)
+      };
+      try {
+        if (id) {
+          await api(`/productos/${id}`, { method: "PUT", body: JSON.stringify(body) });
+          showNotice("Producto actualizado correctamente.");
+        } else {
+          await api("/productos", { method: "POST", body: JSON.stringify(body) });
+          showNotice("Producto registrado correctamente.");
+        }
+        resetProductoForm();
+        await loadProductos();
+      } catch (error) { showNotice(error.message, "error"); }
+    });
+
+    $("productoCancel").addEventListener("click", resetProductoForm);
+    $("productoBuscarBtn").addEventListener("click", () => loadProductos().catch(e => showNotice(e.message, "error")));
+    $("productoBuscar").addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); loadProductos().catch(err => showNotice(err.message, "error")); }
+    });
+
+    async function loadClientes() {
+      clientes = await api("/clientes");
+      renderClientes();
+    }
+
+    function renderClientes() {
+      const filter = $("clienteBuscar").value.trim().toLocaleLowerCase("es");
+      const filtered = clientes.filter(c => `${c.nombre} ${c.correo}`.toLocaleLowerCase("es").includes(filter));
+      $("clientesCount").textContent = `${clientes.length} cliente${clientes.length === 1 ? "" : "s"}`;
+      const body = $("clientesBody");
+      if (!filtered.length) {
+        body.innerHTML = '<tr><td colspan="4" class="empty">No se encontraron clientes.</td></tr>';
+        return;
+      }
+      body.innerHTML = filtered.map(c => `<tr>
+        <td><span class="id-tag">#${c.id}</span></td><td class="strong">${safe(c.nombre)}</td><td>${safe(c.correo)}</td>
+        <td><div class="actions"><button class="button button-small button-edit" data-action="edit-client" data-id="${c.id}">Editar</button><button class="button button-small button-delete" data-action="delete-client" data-id="${c.id}">Eliminar</button></div></td>
+      </tr>`).join("");
+    }
+
+    function resetClienteForm() {
+      $("clienteForm").reset();
+      $("clienteId").value = "";
+      $("clienteFormTitle").textContent = "Registrar cliente";
+      $("clienteSubmit").textContent = "＋ Guardar cliente";
+      $("clienteCancel").classList.add("hidden");
+    }
+
+    $("clienteForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const id = $("clienteId").value;
+      const body = { nombre: $("clienteNombre").value.trim(), correo: $("clienteCorreo").value.trim() };
+      try {
+        if (id) {
+          await api(`/clientes/${id}`, { method: "PUT", body: JSON.stringify(body) });
+          showNotice("Cliente actualizado correctamente.");
+        } else {
+          await api("/clientes", { method: "POST", body: JSON.stringify(body) });
+          showNotice("Cliente registrado correctamente.");
+        }
+        resetClienteForm();
+        await loadClientes();
+      } catch (error) { showNotice(error.message, "error"); }
+    });
+
+    $("clienteCancel").addEventListener("click", resetClienteForm);
+    $("clienteBuscar").addEventListener("input", renderClientes);
+
+    document.addEventListener("click", async event => {
+      const button = event.target.closest("[data-action]");
+      if (!button) return;
+      const id = Number(button.dataset.id);
+      const action = button.dataset.action;
+      try {
+        if (action === "edit-product") {
+          const p = productos.find(item => item.id === id) || await api(`/productos/${id}`);
+          $("productoId").value = p.id;
+          $("productoNombre").value = p.nombre;
+          $("productoPrecio").value = p.precio;
+          $("productoStock").value = p.stock;
+          $("productoFormTitle").textContent = `Editar producto #${p.id}`;
+          $("productoSubmit").textContent = "Guardar cambios";
+          $("productoCancel").classList.remove("hidden");
+          $("productoForm").scrollIntoView({ behavior: "smooth", block: "center" });
+        } else if (action === "delete-product") {
+          if (!confirm(`¿Seguro que deseas eliminar el producto #${id}? Esta acción no se puede deshacer.`)) return;
+          await api(`/productos/${id}`, { method: "DELETE" });
+          showNotice("Producto eliminado correctamente.");
+          await loadProductos();
+        } else if (action === "edit-client") {
+          const c = clientes.find(item => item.id === id) || await api(`/clientes/${id}`);
+          $("clienteId").value = c.id;
+          $("clienteNombre").value = c.nombre;
+          $("clienteCorreo").value = c.correo;
+          $("clienteFormTitle").textContent = `Editar cliente #${c.id}`;
+          $("clienteSubmit").textContent = "Guardar cambios";
+          $("clienteCancel").classList.remove("hidden");
+          $("clienteForm").scrollIntoView({ behavior: "smooth", block: "center" });
+        } else if (action === "delete-client") {
+          if (!confirm(`¿Seguro que deseas eliminar al cliente #${id}?`)) return;
+          await api(`/clientes/${id}`, { method: "DELETE" });
+          showNotice("Cliente eliminado correctamente.");
+          await loadClientes();
+        } else if (action === "view-order") {
+          await loadPedidoDetalle(id);
+        }
+      } catch (error) { showNotice(error.message, "error"); }
+    });
+
+    async function loadPedidos() {
+      pedidos = await api("/pedidos");
+      $("pedidosCount").textContent = `${pedidos.length} pedido${pedidos.length === 1 ? "" : "s"}`;
+      const body = $("pedidosBody");
+      if (!pedidos.length) {
+        body.innerHTML = '<tr><td colspan="6" class="empty">Todavía no hay pedidos registrados.</td></tr>';
+        return;
+      }
+      body.innerHTML = pedidos.map(p => `<tr>
+        <td><span class="id-tag">#${p.id}</span></td><td class="strong">${safe(p.cliente)}</td>
+        <td>${safe(p.fecha)}</td><td><span class="state">${safe(p.estado)}</span></td>
+        <td>${money(p.total)}</td><td><button class="button button-small button-edit" data-action="view-order" data-id="${p.id}">Ver detalle</button></td>
+      </tr>`).join("");
+    }
+
+    async function loadPedidoDetalle(id) {
+      const p = await api(`/pedidos/${id}`);
+      $("pedidoDetalleTitulo").textContent = `Detalle del pedido #${p.id}`;
+      const items = (p.items || []).map(item => `<tr><td>${safe(item.producto)}</td><td>${item.cantidad}</td><td>${money(item.precio_unitario)}</td><td>${money(item.subtotal)}</td></tr>`).join("");
+      $("pedidoDetalleContenido").innerHTML = `<p><strong>Cliente:</strong> ${safe(p.cliente)} &nbsp; <strong>Estado:</strong> ${safe(p.estado)}</p>
+        <div class="table-wrap"><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio unitario</th><th>Subtotal</th></tr></thead><tbody>${items || '<tr><td colspan="4">Sin detalles.</td></tr>'}</tbody></table></div>
+        <p class="detail-total">Total del pedido: ${money(p.total)}</p>`;
+      $("pedidoDetalle").classList.remove("hidden");
+      $("pedidoDetalle").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    $("pedidoDetalleCerrar").addEventListener("click", () => $("pedidoDetalle").classList.add("hidden"));
+    $("pedidosReload").addEventListener("click", () => loadPedidos().catch(e => showNotice(e.message, "error")));
+    $("refreshButton").addEventListener("click", refreshAll);
+
+    document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
+      document.querySelectorAll(".section").forEach(s => s.classList.toggle("active", s.id === tab.dataset.section));
+    }));
+
+    async function refreshAll() {
+      const results = await Promise.allSettled([loadProductos(), loadClientes(), loadPedidos()]);
+      const errors = results.filter(r => r.status === "rejected");
+      if (errors.length) {
+        $("connectionText").textContent = "Revisa la conexión";
+        showNotice(errors.map(e => e.reason.message).join(" · "), "error");
+      } else {
+        $("connectionText").textContent = "API conectada";
+        showNotice("Datos actualizados.");
+      }
+    }
+
+    refreshAll();
+  </script>
+</body>
+
+</html>
